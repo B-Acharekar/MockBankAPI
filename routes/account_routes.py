@@ -1,7 +1,25 @@
 from flask import Blueprint, request, jsonify
 from models.account_model import AccountModel
+from emailsend import send_email_otp
+
 
 account_bp = Blueprint('account', __name__)
+
+@account_bp.route('/send-otp', methods=['POST'])
+def send_otp():
+    data = request.json
+    email = data.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    otp = "123456"  # You can randomize and store later
+    response = send_email_otp(email, otp)
+
+    if response.status_code == 200:
+        return jsonify({"message": "OTP sent"}), 200
+    else:
+        return jsonify({"error": "Failed to send OTP"}), 500
+
 
 @account_bp.route('/link', methods=['POST'])
 def link_account():
@@ -14,7 +32,10 @@ def link_account():
     otp = data.get('otp')  # Example OTP for validation
     
     # Validate OTP (mock OTP validation)
-    if otp != "123456":  # Example: OTP validation
+    generated_otp = "123456"  # Or: str(random.randint(100000, 999999))
+    send_email_otp(email, generated_otp)
+
+    if otp != generated_otp:
         return jsonify({"error": "Invalid OTP"}), 400
 
     # For now, we assume the logged-in user ID is retrieved from session or context
